@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -55,10 +54,10 @@ public class AuthServiceImpl implements AuthService {
 
     private final CustomUserDetailService customUserDetailService;
 
-    private final UserDetailsService userDetailsService;
-
     private final AdminRepository adminRepository;
 
+    @Value("${avatar.img}")
+    private String avatarImg;
 
     @Value("${application.mailing.frontend.activation-url}")
     private String activationUrl;
@@ -73,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(signupRequestDTO.getEmail());
         user.setPhone(signupRequestDTO.getPhone());
         user.setPassword(new BCryptPasswordEncoder().encode(signupRequestDTO.getPassword()));
-        user.setEnabled(false); //Enable true only after otp verification
+        user.setEnabled(true); //Enable true only after otp verification
         user.setBlocked(false);
         user.setUserRole(UserRole.CLIENT);
         user.set_blocked_by_admin(false);
@@ -88,13 +87,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public PartnerDTO signupPartner(PartnerDTO partnerDTO) {
-        PartnerEntity partner = new PartnerEntity();
+        Partner partner = new Partner();
         partner.setName(partnerDTO.getName());
         partner.setLastname(partnerDTO.getLastname());
         partner.setEmail(partnerDTO.getEmail());
         partner.setPhone(partnerDTO.getPhone());
         partner.setPassword(new BCryptPasswordEncoder().encode(partnerDTO.getPassword()));
-        partner.setEnabled(false);
+        partner.setEnabled(true);
         partner.setBlocked(false);
         partner.set_blocked_by_admin(false);
         partner.setUserRole(UserRole.PARTNER);
@@ -131,9 +130,9 @@ public class AuthServiceImpl implements AuthService {
                     .build();
 
         }
-        Optional<AdminEntity> optionalAdmin = adminRepository.findFirstByEmail(loginDTO.getEmail());
+        Optional<Admin> optionalAdmin = adminRepository.findFirstByEmail(loginDTO.getEmail());
         if (optionalAdmin.isPresent()) {
-            AdminEntity admin = optionalAdmin.get();
+            Admin admin = optionalAdmin.get();
             final UserDetails adminDetails = customUserDetailService.loadUserByUsername(loginDTO.getEmail());
             Map<String, String> tokens = jwtUtil.createTokens(adminDetails);
 
@@ -145,9 +144,9 @@ public class AuthServiceImpl implements AuthService {
                     .expiresIn(jwtUtil.getExpirationTime())
                     .build();
         }
-        Optional<PartnerEntity> optionalPartner = partnerRepository.findFirstByEmail(loginDTO.getEmail());
+        Optional<Partner> optionalPartner = partnerRepository.findFirstByEmail(loginDTO.getEmail());
         if (optionalPartner.isPresent()) {
-            PartnerEntity partner = optionalPartner.get();
+            Partner partner = optionalPartner.get();
 
             // Check if the partner is blocked or not enabled
 //            if (partner.isBlocked() || !partner.isEnabled()) {
@@ -255,11 +254,11 @@ public class AuthServiceImpl implements AuthService {
         sendValidationEmailCommon(user.getEmail(), user.getName(), user.getId(), user, null);
     }
 
-    private void sendValidationEmail(PartnerEntity partner) {
+    private void sendValidationEmail(Partner partner) {
         sendValidationEmailCommon(partner.getEmail(), partner.getName(), partner.getId(), null, partner);
     }
 
-    private void sendValidationEmailCommon(String email, String name, Long id, User user, PartnerEntity partner) {
+    private void sendValidationEmailCommon(String email, String name, Long id, User user, Partner partner) {
         if (email == null || email.isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
@@ -281,7 +280,7 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
-    private String generateAndSaveActivationToken(User user, PartnerEntity partner) {
+    private String generateAndSaveActivationToken(User user, Partner partner) {
         // Generate a token
         String generatedToken = generateActivationCode();
         log.debug("Generated Token: " + generatedToken);  // Log the generated token

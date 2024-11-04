@@ -2,13 +2,16 @@ package com.ReachU.ServiceBookingSystem.entity;
 
 import com.ReachU.ServiceBookingSystem.dto.UserDto;
 import com.ReachU.ServiceBookingSystem.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -43,10 +46,13 @@ public class User implements UserDetails {
 
     private boolean is_google_logged_in;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Address> addresses;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<UserPartnerConnection> connections = new ArrayList<>();
 
     public UserDto getDto() {
         UserDto userDto = new UserDto();

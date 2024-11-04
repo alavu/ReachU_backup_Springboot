@@ -2,9 +2,11 @@ package com.ReachU.ServiceBookingSystem.controller;
 
 import com.ReachU.ServiceBookingSystem.dto.AdDTO;
 import com.ReachU.ServiceBookingSystem.dto.ReservationDTO;
-import com.ReachU.ServiceBookingSystem.entity.PartnerEntity;
-import com.ReachU.ServiceBookingSystem.services.company.CompanyService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ReachU.ServiceBookingSystem.dto.UserDto;
+import com.ReachU.ServiceBookingSystem.entity.User;
+import com.ReachU.ServiceBookingSystem.repository.UserRepository;
+import com.ReachU.ServiceBookingSystem.services.company.AdminService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,20 +15,28 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/admin")
 public class AdminController {
 
-    @Autowired
-    private CompanyService companyService;
+    private final AdminService adminService;
+
+    @GetMapping("/list")
+    public ResponseEntity<List<User>> getAllUsersList() {
+        List<User> users = adminService.getAllUsers();
+        if (users == null || users.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(users);
+    }
 
     @PostMapping("/ad/{userId}")
     public ResponseEntity<?> postService(@AuthenticationPrincipal UserDetails userDetails, @ModelAttribute AdDTO adDTO) throws IOException {
-        Long userId = companyService.getAdminIdFromUserDetails(userDetails);
+        Long userId = adminService.getAdminIdFromUserDetails(userDetails);
 
-        boolean success = companyService.postService(userId, adDTO);
+        boolean success = adminService.postService(userId, adDTO);
         if(success){
             return ResponseEntity.status(HttpStatus.OK).build();
         }else{
@@ -34,15 +44,15 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/ads/{userId}")
+    @GetMapping("/ads")
     public ResponseEntity<?> getAllAdsByUserId(@AuthenticationPrincipal UserDetails userDetails){
-        Long userId = companyService.getAdminIdFromUserDetails(userDetails);
-        return ResponseEntity.ok(companyService.getAllAds(userId));
+        Long userId = adminService.getAdminIdFromUserDetails(userDetails);
+        return ResponseEntity.ok(adminService.getAllAds(userId));
     }
 
     @GetMapping("/ad/{adId}")
     public ResponseEntity<?> getAdById(@PathVariable Long adId){
-        AdDTO adDTO = companyService.getAdById(adId);
+        AdDTO adDTO = adminService.getAdById(adId);
         if(adDTO != null){
             return ResponseEntity.ok(adDTO);
         }
@@ -53,7 +63,7 @@ public class AdminController {
 
     @PutMapping("/ad/{adId}")
     public ResponseEntity<?> updateAd(@PathVariable Long adId, @ModelAttribute AdDTO adDTO) throws IOException {
-        boolean success = companyService.updateAd(adId, adDTO);
+        boolean success = adminService.updateAd(adId, adDTO);
         if(success){
             return ResponseEntity.status(HttpStatus.OK).build();
         } else{
@@ -63,7 +73,7 @@ public class AdminController {
 
     @DeleteMapping("/ad/{adId}")
     public ResponseEntity<?> deleteAd(@PathVariable Long adId){
-        boolean success = companyService.deleteAd(adId);
+        boolean success = adminService.deleteAd(adId);
         if(success){
             return ResponseEntity.status(HttpStatus.OK).build();
         }else {
@@ -71,14 +81,14 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/bookings/{companyId}")
-    public ResponseEntity<List<ReservationDTO>> getAllAdBookings(@PathVariable Long companyId){
-        return ResponseEntity.ok(companyService.getAllAdBookings(companyId));
+    @GetMapping("/bookings/{adminId}")
+    public ResponseEntity<List<ReservationDTO>> getAllAdBookings(@PathVariable Long adminId){
+        return ResponseEntity.ok(adminService.getAllAdBookings(adminId));
     }
 
     @GetMapping("/booking/{bookingId}/{status}")
     public ResponseEntity<?> changeBookingStatus(@PathVariable Long bookingId, @PathVariable String status){
-        boolean success = companyService.changeBookingStatus(bookingId, status);
+        boolean success = adminService.changeBookingStatus(bookingId, status);
         if(success) return ResponseEntity.ok().build();
         return ResponseEntity.notFound().build();
     }

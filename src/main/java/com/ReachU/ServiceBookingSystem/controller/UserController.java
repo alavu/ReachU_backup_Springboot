@@ -1,6 +1,5 @@
 package com.ReachU.ServiceBookingSystem.controller;
 
-import com.ReachU.ServiceBookingSystem.dto.UserDto;
 import com.ReachU.ServiceBookingSystem.entity.User;
 import com.ReachU.ServiceBookingSystem.services.user.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,7 @@ public class UserController {
     @GetMapping("/list")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userManagementService.getAllUsers();
+        System.out.println("List of users: " + users);
         return ResponseEntity.ok(users);
     }
 

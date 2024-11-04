@@ -1,16 +1,16 @@
 package com.ReachU.ServiceBookingSystem.repository;
 
-import com.ReachU.ServiceBookingSystem.entity.PartnerEntity;
-import com.ReachU.ServiceBookingSystem.entity.User;
-import jakarta.mail.Part;
+import com.ReachU.ServiceBookingSystem.entity.Partner;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface PartnerRepository extends JpaRepository<PartnerEntity, Long> {
-    Optional<PartnerEntity> findByEmail(String email);
-    Optional<PartnerEntity> findFirstByEmail(String email);
+@Repository
+public interface PartnerRepository extends JpaRepository<Partner, Long> {
+    Optional<Partner> findByEmail(String email);
+    Optional<Partner> findFirstByEmail(String email);
+    List<Partner> findByService(String service);
 
-    List<PartnerEntity> findByService(String service);
 }

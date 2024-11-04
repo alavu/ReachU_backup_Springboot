@@ -28,7 +28,7 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
 @RequiredArgsConstructor
-public class WebSecurityConfig {
+public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
 
@@ -45,9 +45,15 @@ public class WebSecurityConfig {
                                 .requestMatchers("/client/sign-up", "/partner/sign-up", "/activate-account", "/resend-activation-code", "/logout", "/authenticate").permitAll()
                                 .requestMatchers("/api/client/**").authenticated()
                                 .requestMatchers("/api/addresses/**").authenticated()
+                                .requestMatchers("/api/users/**").permitAll()
                                 .requestMatchers("/api/category/**").permitAll()
                                 .requestMatchers("/api/partners/**").permitAll()
                                 .requestMatchers("/api/payment").permitAll()
+                                .requestMatchers("/api/chat-socket/**").permitAll()
+                                .requestMatchers("/chat-socket/**").permitAll()
+                                .requestMatchers("/api/connections/**").permitAll()
+                                .requestMatchers("api/admin/dashboard/**").permitAll()
+//                                .requestMatchers("/api/admin/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                                 .anyRequest().authenticated()
                 )

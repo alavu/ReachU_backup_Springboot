@@ -1,19 +1,23 @@
 package com.ReachU.ServiceBookingSystem.entity;
 
 import com.ReachU.ServiceBookingSystem.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "partner")
 @Data
-public class PartnerEntity implements UserDetails {
+public class Partner implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,6 +61,17 @@ public class PartnerEntity implements UserDetails {
 
     private boolean is_google_logged_in;
 
+    private String jobStatus;
+    private LocalDate startDate;
+    private LocalDate endDate;
+
+    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL)
+    private List<Reservation> bookings;
+
+    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<UserPartnerConnection> connections = new ArrayList<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(new SimpleGrantedAuthority(this.userRole.name()));
@@ -66,4 +81,5 @@ public class PartnerEntity implements UserDetails {
     public String getUsername() {
         return email;
     }
+
 }

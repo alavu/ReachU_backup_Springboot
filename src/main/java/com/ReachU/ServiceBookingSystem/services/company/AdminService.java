@@ -3,14 +3,17 @@ package com.ReachU.ServiceBookingSystem.services.company;
 
 import com.ReachU.ServiceBookingSystem.dto.AdDTO;
 import com.ReachU.ServiceBookingSystem.dto.ReservationDTO;
+import com.ReachU.ServiceBookingSystem.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.IOException;
 import java.util.List;
 
-public interface CompanyService {
+public interface AdminService {
 
 //    Long getUserIdFromUserDetails(UserDetails userDetails);
+
+    List<User> getAllUsers();
 
     boolean postService(Long userId, AdDTO adDTO) throws IOException;
 
@@ -22,7 +25,7 @@ public interface CompanyService {
 
     boolean deleteAd(Long adId);
 
-    List<ReservationDTO> getAllAdBookings(Long companyId);
+    List<ReservationDTO> getAllAdBookings(Long adminId);
 
     boolean changeBookingStatus(Long bookingId, String status);
 

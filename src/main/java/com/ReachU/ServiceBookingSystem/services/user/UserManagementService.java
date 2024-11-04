@@ -8,7 +8,7 @@ import java.util.List;
 public interface UserManagementService {
 
     User save(UserDto userDto);
-    public List<User> getAllUsers();
+     List<User> getAllUsers();
 //    public List<UserDto> getAllUsers();
 
     User blockUser(Long userId);

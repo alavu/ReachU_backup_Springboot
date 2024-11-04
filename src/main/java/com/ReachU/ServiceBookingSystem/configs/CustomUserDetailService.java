@@ -1,7 +1,7 @@
 package com.ReachU.ServiceBookingSystem.configs;
 
-import com.ReachU.ServiceBookingSystem.entity.AdminEntity;
-import com.ReachU.ServiceBookingSystem.entity.PartnerEntity;
+import com.ReachU.ServiceBookingSystem.entity.Admin;
+import com.ReachU.ServiceBookingSystem.entity.Partner;
 import com.ReachU.ServiceBookingSystem.entity.User;
 import com.ReachU.ServiceBookingSystem.enums.UserRole;
 import com.ReachU.ServiceBookingSystem.repository.AdminRepository;
@@ -29,9 +29,9 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<AdminEntity> adminOpt = adminRepository.findFirstByEmail(username);
+        Optional<Admin> adminOpt = adminRepository.findFirstByEmail(username);
         if (adminOpt.isPresent()) {
-            AdminEntity admin = adminOpt.get();
+            Admin admin = adminOpt.get();
             System.out.println("admin" + admin);
             Collection<GrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority(UserRole.ADMIN.name()));
             return new org.springframework.security.core.userdetails.User(admin.getUsername(), admin.getPassword(), authorities);
@@ -43,13 +43,12 @@ public class CustomUserDetailService implements UserDetailsService {
             return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
         }
 
-        Optional<PartnerEntity> partnerOpt = partnerRepository.findByEmail(username);
+        Optional<Partner> partnerOpt = partnerRepository.findByEmail(username);
         if (partnerOpt.isPresent()) {
-            PartnerEntity partner = partnerOpt.get();
+            Partner partner = partnerOpt.get();
             Collection<GrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority(UserRole.PARTNER.name()));
             return new org.springframework.security.core.userdetails.User(partner.getEmail(), partner.getPassword(), authorities);
         }
-
         throw new UsernameNotFoundException("Username " + username + " not found");
     }
 }

@@ -35,5 +35,5 @@ public class Token {
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "partnerId", nullable = true)
-    private PartnerEntity partner;
+    private Partner partner;
 }

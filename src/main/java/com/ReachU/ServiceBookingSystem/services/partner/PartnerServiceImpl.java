@@ -1,11 +1,11 @@
 package com.ReachU.ServiceBookingSystem.services.partner;
 
 import com.ReachU.ServiceBookingSystem.dto.PartnerDTO;
-import com.ReachU.ServiceBookingSystem.entity.PartnerEntity;
+import com.ReachU.ServiceBookingSystem.entity.Partner;
 import com.ReachU.ServiceBookingSystem.exceptions.ResourceNotFoundException;
 import com.ReachU.ServiceBookingSystem.repository.PartnerRepository;
 import io.jsonwebtoken.io.IOException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,14 +14,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class PartnerServiceImpl implements PartnerService {
 
-    @Autowired
-    private PartnerRepository partnerRepository;
+    private final PartnerRepository partnerRepository;
 
-    // Fetch partner by ID
+    @Override
     public PartnerDTO getPartnerById(Long id) {
-        Optional<PartnerEntity> partnerEntity = partnerRepository.findById(id);
+        Optional<Partner> partnerEntity = partnerRepository.findById(id);
         if (partnerEntity.isPresent()) {
             PartnerDTO partnerDTO = new PartnerDTO();
             partnerDTO.setId(partnerEntity.get().getId());
@@ -39,7 +39,7 @@ public class PartnerServiceImpl implements PartnerService {
 
     @Override
     public PartnerDTO updatePartner(Long id, PartnerDTO partnerDTO, MultipartFile image) throws IOException {
-        PartnerEntity existingPartner = partnerRepository.findById(id)
+        Partner existingPartner = partnerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Partner not found with ID: " + id));
         existingPartner.setName(partnerDTO.getName());
 //        existingPartner.setLastname(partnerDTO.getLastname());
@@ -56,61 +56,63 @@ public class PartnerServiceImpl implements PartnerService {
             }
         }
 
-        PartnerEntity updatedPartner = partnerRepository.save(existingPartner);
+        Partner updatedPartner = partnerRepository.save(existingPartner);
         // Return the updated PartnerDTO
         return mapEntityToDto(updatedPartner);
     }
 
     // Helper method to map PartnerEntity to PartnerDTO
-    private PartnerDTO mapEntityToDto(PartnerEntity partnerEntity) {
+    private PartnerDTO mapEntityToDto(Partner partner) {
         PartnerDTO partnerDTO = new PartnerDTO();
-        partnerDTO.setId(partnerEntity.getId());
-        partnerDTO.setName(partnerEntity.getName());
+        partnerDTO.setId(partner.getId());
+        partnerDTO.setName(partner.getName());
 //        partnerDTO.setLastname(partnerEntity.getLastname());
-        partnerDTO.setEmail(partnerEntity.getEmail());
-        partnerDTO.setPhone(partnerEntity.getPhone());
-        partnerDTO.setService(partnerEntity.getService());
-        partnerDTO.setImg(partnerEntity.getImg());
+        partnerDTO.setEmail(partner.getEmail());
+        partnerDTO.setPhone(partner.getPhone());
+        partnerDTO.setService(partner.getService());
+        partnerDTO.setImg(partner.getImg());
 
         return partnerDTO;
     }
 
     @Override
-    public List<PartnerEntity> getAllPartners() {
-        return partnerRepository.findAll()
-                .stream()
-                .peek(partner -> System.out.println("Fetch Partner " + partner))
-                .toList();
+    public List<Partner> getAllPartners() {
+        return partnerRepository.findAll();
+//                .stream()
+//                .peek(partner -> System.out.println("Fetch Partner " + partner))
+//                .toList();
     }
 
     @Override
-    public PartnerEntity blockPartner(Long id) {
-        PartnerEntity partner = partnerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+    public Partner blockPartner(Long id) {
+        Partner partner = partnerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         partner.setBlocked(true);
         partnerRepository.save(partner);
         return partner;
     }
 
     @Override
-    public PartnerEntity unblockPartner(Long id) {
-        PartnerEntity partner = partnerRepository.findById(id).orElseThrow(() -> new RuntimeException("Partner not found"));
+    public Partner unblockPartner(Long id) {
+        Partner partner = partnerRepository.findById(id).orElseThrow(() -> new RuntimeException("Partner not found"));
         partner.setBlocked(false);
         partnerRepository.save(partner);
         return partner;
     }
 
-    public PartnerEntity verifyPartner(Long id) {
-        PartnerEntity partner = partnerRepository.findById(id)
+    @Override
+    public Partner verifyPartner(Long id) {
+        Partner partner = partnerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Partner not found with ID: " + id));
         partner.setVerified(true);
         partnerRepository.save(partner);
         return partner;
     }
 
-    public PartnerEntity rejectPartner(Long partnerId, String rejectionReason) {
-        Optional<PartnerEntity> partnerOptional = partnerRepository.findById(partnerId);
+    @Override
+    public Partner rejectPartner(Long partnerId, String rejectionReason) {
+        Optional<Partner> partnerOptional = partnerRepository.findById(partnerId);
         if (partnerOptional.isPresent()) {
-            PartnerEntity partner = partnerOptional.get();
+            Partner partner = partnerOptional.get();
             partner.setRejected(true);
             partner.setRejectionReason(rejectionReason);
             return partnerRepository.save(partner);
@@ -122,9 +124,11 @@ public class PartnerServiceImpl implements PartnerService {
     @Override
     public List<PartnerDTO> getPartnersByService(String service) {
         System.out.println("Service being queried: " + service.trim());
-        List<PartnerEntity> partners = partnerRepository.findByService(service.trim());
+        List<Partner> partners = partnerRepository.findByService(service.trim());
          return partners.stream()
                 .map(this::mapEntityToDto)
                 .collect(Collectors.toList());
     }
+
+
 }

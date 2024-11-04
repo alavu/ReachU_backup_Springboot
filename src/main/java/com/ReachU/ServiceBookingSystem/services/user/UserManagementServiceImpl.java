@@ -43,12 +43,12 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     @Override
     public List<User> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .peek(user -> System.out.println("Fetched User: " + user)) // Log the User object
-                .filter(user -> user.getUserRole() != UserRole.ADMIN)
-                .peek(user -> System.out.println("Filtered User: " + user)) // Log after filtering
-                .toList();
+        return userRepository.findAll();
+//                .stream()
+//                .peek(user -> System.out.println("Fetched User: " + user)) // Log the User object
+//                .filter(user -> user.getUserRole() != UserRole.ADMIN)
+//                .peek(user -> System.out.println("Filtered User: " + user)) // Log after filtering
+//                .toList();
     }
 
 

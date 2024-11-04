@@ -23,6 +23,8 @@ public class AdDTO {
 
     private Long subcategoryId;
 
+    private Long partnerId;
+
 
 //    private String companyName;
 }
