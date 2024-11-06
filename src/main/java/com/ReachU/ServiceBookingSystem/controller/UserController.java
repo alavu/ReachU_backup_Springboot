@@ -16,6 +16,11 @@ public class UserController {
     @Autowired
     private UserManagementService userManagementService;
 
+    @GetMapping("/test")
+    public String testApi() {
+        return "Backend is working";
+    }
+
     @GetMapping("/list")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userManagementService.getAllUsers();
