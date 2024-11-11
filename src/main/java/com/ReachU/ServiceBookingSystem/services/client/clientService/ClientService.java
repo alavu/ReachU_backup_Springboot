@@ -44,4 +44,18 @@ public interface ClientService {
     double getTotalRevenue();
 
     long getTotalBookings();
+
+    List<String> getWeeklyLabels();
+
+    List<Double> getWeeklyRevenue();
+
+    List<String> getMonthlyLabels();
+
+    List<Double> getMonthlyRevenue();
+
+    List<String> getYearlyLabels();
+
+    double getYearlyRevenue();
+
+    double getCustomRangeRevenue(LocalDate startDate, LocalDate endDate);
 }

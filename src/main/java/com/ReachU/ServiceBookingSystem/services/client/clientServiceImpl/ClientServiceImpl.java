@@ -17,7 +17,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,10 +81,10 @@ public class ClientServiceImpl implements ClientService {
 
 
     @Override
-    public AdDetailsForClientDTO getAdDetailsByAdId(Long adId){
+    public AdDetailsForClientDTO getAdDetailsByAdId(Long adId) {
         Optional<Ad> optionalAd = adRepository.findById(adId);
         AdDetailsForClientDTO adDetailsForClientDTO = new AdDetailsForClientDTO();
-        if(optionalAd.isPresent()){
+        if (optionalAd.isPresent()) {
             adDetailsForClientDTO.setAdDTO(optionalAd.get().getAdDto());
 
             List<Review> reviewList = reviewRepository.findAllByAdId(adId);
@@ -90,7 +94,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public List<ReservationDTO> getAllBookingsByUserId(Long userId){
+    public List<ReservationDTO> getAllBookingsByUserId(Long userId) {
         return reservationRepository.findAllByUserId(userId).stream().map(Reservation::getReservationDto).collect(Collectors.toList());
     }
 
@@ -111,11 +115,11 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Boolean giveReview(ReviewDTO reviewDTO){
+    public Boolean giveReview(ReviewDTO reviewDTO) {
         Optional<User> optionalUser = userRepository.findById(reviewDTO.getUserId());
         Optional<Reservation> optionalBooking = reservationRepository.findById(reviewDTO.getBookId());
 
-        if(optionalUser.isPresent() && optionalBooking.isPresent()){
+        if (optionalUser.isPresent() && optionalBooking.isPresent()) {
             Review review = new Review();
 
             review.setReviewDate(new Date());
@@ -211,6 +215,123 @@ public class ClientServiceImpl implements ClientService {
         return reservationRepository.findAll().stream()
                 .filter(reservation -> "Paid".equals(reservation.getPaymentStatus()))
                 .count();
+    }
+
+    @Override
+    public List<String> getWeeklyLabels() {
+        LocalDate startOfWeek = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        return startOfWeek.datesUntil(startOfWeek.plusDays(7))  // Loop through the 7 days of the week
+                .map(date -> date.format(DateTimeFormatter.ofPattern("E")))  // Format as day abbreviations (Mon, Tue, etc.)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Double> getWeeklyRevenue() {
+        LocalDate startOfWeek = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        List<Double> weeklyRevenue = new ArrayList<>();
+
+        // Loop through each day from Monday to Sunday
+        for (int i = 0; i < 7; i++) {
+            LocalDate currentDate = startOfWeek.plusDays(i);
+            // Calculate the revenue for the current day
+            double dailyRevenue = calculateDailyRevenue(currentDate);
+            weeklyRevenue.add(dailyRevenue);
+        }
+
+        return weeklyRevenue;
+    }
+
+    private double calculateDailyRevenue(LocalDate date) {
+        // Assuming each booking has a revenue amount and a booking date
+        List<Reservation> dailyBookings = reservationRepository.findByBookingDate(date);
+
+        // Sum up the revenue from each booking on this date
+        return dailyBookings.stream()
+                .mapToDouble(Reservation::getPrice)  // Assuming each Booking has a getRevenue() method
+                .sum();
+    }
+    @Override
+    public List<String> getMonthlyLabels() {
+        int currentYear = LocalDate.now().getYear();
+
+        List<String> labels = new ArrayList<>();
+
+        // Start from January and go until December of the current year
+        for (int month = 1; month <= 12; month++) {
+            YearMonth yearMonth = YearMonth.of(currentYear, month);
+            labels.add(yearMonth.format(DateTimeFormatter.ofPattern("MMM yyyy"))); // Example: Jan 2024
+        }
+
+        return labels;
+    }
+
+    public List<Double> getMonthlyRevenue() {
+        List<Double> monthlyRevenues = new ArrayList<>();
+        YearMonth currentMonth = YearMonth.now();
+
+        // Loop through each month in the current year (January to December)
+        for (int i = 0; i < 12; i++) {
+            YearMonth month = currentMonth.minusMonths(i);
+            LocalDate firstDayOfMonth = month.atDay(1);
+            LocalDate lastDayOfMonth = month.atEndOfMonth();
+
+            // If it's the current month, adjust the last date to the current date
+            if (month.equals(currentMonth)) {
+                lastDayOfMonth = LocalDate.now();
+            }
+
+            // Calculate revenue for this month
+            double revenue = calculateRevenueBetweenDates(firstDayOfMonth, lastDayOfMonth);
+
+            // Add revenue to the list
+            if (revenue > 0) {
+                monthlyRevenues.add(revenue);
+            } else {
+                monthlyRevenues.add(0.0); // Optional: Return 0 if no revenue
+            }
+        }
+
+        Collections.reverse(monthlyRevenues);  // Reverse the list to get Jan-Dec order
+        return monthlyRevenues;
+    }
+
+    @Override
+    public List<String> getYearlyLabels() {
+        List<Reservation> reservations = reservationRepository.findAll();
+
+        // Extract distinct years from the reservation data
+        Set<Integer> yearsSet = reservations.stream()
+                .map(reservation -> reservation.getBookDate().getYear())
+                .collect(Collectors.toSet());
+
+        // Convert the Set of years to a List and sort it in descending order
+        List<String> yearsList = yearsSet.stream()
+                .sorted(Comparator.reverseOrder())  // To get the years in descending order
+                .map(String::valueOf)  // Convert the Integer years to String
+                .collect(Collectors.toList());
+
+        return yearsList;
+    }
+
+
+
+    @Override
+    public double getYearlyRevenue() {
+        LocalDate startOfYear = LocalDate.now().with(TemporalAdjusters.firstDayOfYear());
+        return calculateRevenueBetweenDates(startOfYear, LocalDate.now());
+    }
+
+    @Override
+    public double getCustomRangeRevenue(LocalDate startDate, LocalDate endDate) {
+        return calculateRevenueBetweenDates(startDate, endDate);
+    }
+
+    private double calculateRevenueBetweenDates(LocalDate startDate, LocalDate endDate) {
+        List<Reservation> reservations = reservationRepository.findByDateRange(startDate, endDate);
+        return reservations.stream()
+                .mapToDouble(reservation -> reservation.getAd().getPrice())
+                .sum();
+
     }
 }
 

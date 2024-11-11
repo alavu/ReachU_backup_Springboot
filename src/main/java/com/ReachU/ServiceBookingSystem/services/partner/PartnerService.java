@@ -4,6 +4,7 @@ import com.ReachU.ServiceBookingSystem.dto.PartnerDTO;
 import com.ReachU.ServiceBookingSystem.entity.Partner;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface PartnerService {

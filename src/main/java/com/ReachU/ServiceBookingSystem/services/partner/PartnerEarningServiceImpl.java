@@ -11,8 +11,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.temporal.TemporalAdjusters;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -24,7 +26,7 @@ public class PartnerEarningServiceImpl implements PartnerEarningService {
 
     @Override
     public BigDecimal getTotalEarnings(Long partnerId) {
-      List<PartnerEarnings> earningsList = partnerEarningsRepository.findByPartnerId(partnerId);
+        List<PartnerEarnings> earningsList = partnerEarningsRepository.findByPartnerId(partnerId);
         BigDecimal totalEarnings = earningsList.stream()
                 .map(PartnerEarnings::getEarnings)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -118,5 +120,89 @@ public class PartnerEarningServiceImpl implements PartnerEarningService {
     // Get total canceled bookings for the partner
     public long getTotalCanceled(Long partnerId) {
         return reservationRepository.countByPartnerIdAndReservationStatus(partnerId, ReservationStatus.CANCELLED);
+    }
+
+    @Override
+    public Map<String, Object> getWeeklyRevenueBreakdown(Long partnerId) {
+        LocalDate startOfWeek = LocalDate.now().with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        List<String> labels = Arrays.asList("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
+        List<BigDecimal> dailyRevenues = new ArrayList<>(Collections.nCopies(7, BigDecimal.ZERO));
+
+        for (int i = 0; i < 7; i++) {
+            LocalDate day = startOfWeek.plusDays(i);
+            LocalDateTime startOfDay = day.atStartOfDay();
+            LocalDateTime endOfDay = day.atTime(23, 59, 59);
+
+            BigDecimal dailyRevenue = partnerEarningsRepository.findByPartnerIdAndCompletedDateBetween(partnerId, startOfDay, endOfDay)
+                    .stream()
+                    .map(PartnerEarnings::getEarnings)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            dailyRevenues.set(i, dailyRevenue);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("labels", labels);
+        response.put("data", dailyRevenues);
+
+        return response;
+    }
+
+    @Override
+    public Map<String, Object> getMonthlyRevenueBreakdown(Long partnerId) {
+        LocalDate startOfMonth = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
+        List<String> labels = Arrays.asList("Week 1", "Week 2", "Week 3", "Week 4");
+        List<BigDecimal> weeklyRevenues = new ArrayList<>(Collections.nCopies(4, BigDecimal.ZERO));
+
+        for (int i = 0; i < 4; i++) {
+            LocalDate startOfWeek = startOfMonth.plusDays(i * 7);
+            LocalDate endOfWeek = startOfWeek.plusDays(6).isAfter(LocalDate.now().with(TemporalAdjusters.lastDayOfMonth()))
+                    ? LocalDate.now().with(TemporalAdjusters.lastDayOfMonth())
+                    : startOfWeek.plusDays(6);
+
+            LocalDateTime startOfWeekTime = startOfWeek.atStartOfDay();
+            LocalDateTime endOfWeekTime = endOfWeek.atTime(23, 59, 59);
+
+            BigDecimal weeklyRevenue = partnerEarningsRepository.findByPartnerIdAndCompletedDateBetween(partnerId, startOfWeekTime, endOfWeekTime)
+                    .stream()
+                    .map(PartnerEarnings::getEarnings)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            weeklyRevenues.set(i, weeklyRevenue);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("labels", labels);
+        response.put("data", weeklyRevenues);
+
+        return response;
+    }
+
+    @Override
+    public Map<String, Object> getYearlyRevenueBreakdown(Long partnerId) {
+        LocalDate startOfYear = LocalDate.now().with(TemporalAdjusters.firstDayOfYear());
+        List<String> labels = Arrays.asList("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+        List<BigDecimal> monthlyRevenues = new ArrayList<>(Collections.nCopies(12, BigDecimal.ZERO));
+
+        for (int i = 0; i < 12; i++) {
+            LocalDate startOfMonth = startOfYear.plusMonths(i);
+            LocalDate endOfMonth = startOfMonth.with(TemporalAdjusters.lastDayOfMonth());
+
+            LocalDateTime startOfMonthTime = startOfMonth.atStartOfDay();
+            LocalDateTime endOfMonthTime = endOfMonth.atTime(23, 59, 59);
+
+            BigDecimal monthlyRevenue = partnerEarningsRepository.findByPartnerIdAndCompletedDateBetween(partnerId, startOfMonthTime, endOfMonthTime)
+                    .stream()
+                    .map(PartnerEarnings::getEarnings)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            monthlyRevenues.set(i, monthlyRevenue);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("labels", labels);
+        response.put("data", monthlyRevenues);
+
+        return response;
     }
 }

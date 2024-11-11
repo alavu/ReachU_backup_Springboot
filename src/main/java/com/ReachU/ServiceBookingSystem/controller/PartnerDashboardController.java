@@ -51,4 +51,19 @@ public class PartnerDashboardController {
 
         return graphData;
     }
+
+    @GetMapping("/{partnerId}/weekly-revenue")
+    public Map<String, Object> getWeeklyRevenue(@PathVariable Long partnerId) {
+        return partnerEarningService.getWeeklyRevenueBreakdown(partnerId);
+    }
+
+    @GetMapping("/{partnerId}/monthly-revenue")
+    public Map<String, Object> getMonthlyRevenue(@PathVariable Long partnerId) {
+        return partnerEarningService.getMonthlyRevenueBreakdown(partnerId);
+    }
+
+    @GetMapping("/{partnerId}/yearly-revenue")
+    public Map<String, Object> getYearlyRevenue(@PathVariable Long partnerId) {
+        return partnerEarningService.getYearlyRevenueBreakdown(partnerId);
+    }
 }
