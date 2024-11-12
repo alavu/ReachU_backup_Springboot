@@ -20,6 +20,7 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chat-socket")
                 .setAllowedOrigins("https://www.reachuapp.online/")
+//                .setAllowedOrigins("http://localhost:4200")
                 .withSockJS();
     }
 }
