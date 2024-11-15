@@ -11,10 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -41,6 +38,8 @@ public class User implements UserDetails {
 
     private boolean is_blocked_by_admin;
 
+    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
@@ -53,6 +52,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<UserPartnerConnection> connections = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "users")
+    private Set<Room> rooms = new HashSet<>();
 
     public UserDto getDto() {
         UserDto userDto = new UserDto();

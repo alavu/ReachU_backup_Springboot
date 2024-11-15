@@ -9,8 +9,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,20 +47,6 @@ public class DashboardController {
         return ResponseEntity.ok(Map.of("totalBookings", totalBookings));
     }
 
-//    @GetMapping("/weekly-revenue")
-//    public ResponseEntity<Map<String, Double>> getWeeklyRevenue() {
-//        double weeklyRevenue = clientService.getWeeklyRevenue();
-//        System.out.println("weeklyRevenue:"+weeklyRevenue);
-//        return ResponseEntity.ok(Map.of("weeklyRevenue", weeklyRevenue));
-//    }
-
-//    @GetMapping("/weekly-revenue")
-//    public ResponseEntity<?> getWeeklyRevenue() {
-//        double weeklyRevenue = clientService.getWeeklyRevenue();
-//        System.out.println("weeklyRevenue:"+weeklyRevenue);
-//        return ResponseEntity.ok(weeklyRevenue);
-//    }
-
     @GetMapping("/weekly-revenue")
     public ResponseEntity<Map<String, Object>> getWeeklyRevenue() {
         Map<String, Object> response = new HashMap<>();
@@ -78,7 +67,7 @@ public class DashboardController {
     public ResponseEntity<Map<String, Object>> getYearlyRevenue() {
         Map<String, Object> response = new HashMap<>();
         response.put("labels", clientService.getYearlyLabels());
-        response.put("data", clientService.getYearlyRevenue());
+        response.put("data", clientService.getYearlyRevenueList()); // Change to return a list
         return ResponseEntity.ok(response);
     }
 
@@ -86,8 +75,20 @@ public class DashboardController {
     public ResponseEntity<Map<String, Object>> getCustomRangeRevenue(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        List<String> labels = start.datesUntil(end.plusDays(1))
+                .map(date -> date.format(DateTimeFormatter.ofPattern("E MMM d")))
+                .collect(Collectors.toList());
+
+        List<Double> data = start.datesUntil(end.plusDays(1))
+                .map(clientService::calculateDailyRevenue) // Use clientService to access calculateDailyRevenue
+                .collect(Collectors.toList());
+
         Map<String, Object> response = new HashMap<>();
-        response.put("data",clientService.getCustomRangeRevenue(LocalDate.parse(startDate), LocalDate.parse(endDate)));
+        response.put("labels", labels);
+        response.put("data", data);
         return ResponseEntity.ok(response);
     }
 }

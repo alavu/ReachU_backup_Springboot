@@ -2,20 +2,13 @@ package com.ReachU.ServiceBookingSystem.services.partner;
 
 import com.ReachU.ServiceBookingSystem.dto.PartnerDTO;
 import com.ReachU.ServiceBookingSystem.entity.Partner;
-import com.ReachU.ServiceBookingSystem.entity.PartnerEarnings;
 import com.ReachU.ServiceBookingSystem.exceptions.ResourceNotFoundException;
-import com.ReachU.ServiceBookingSystem.repository.PartnerEarningsRepository;
 import com.ReachU.ServiceBookingSystem.repository.PartnerRepository;
-import com.ReachU.ServiceBookingSystem.repository.ReservationRepository;
 import io.jsonwebtoken.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjusters;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -84,11 +77,56 @@ public class PartnerServiceImpl implements PartnerService {
 
     @Override
     public List<Partner> getAllPartners() {
-        return partnerRepository.findAll();
-//                .stream()
-//                .peek(partner -> System.out.println("Fetch Partner " + partner))
-//                .toList();
+        List<Partner> partners = partnerRepository.findAll();
+        if (partners == null || partners.isEmpty()) {
+            System.out.println("No partners found in database.");
+        } else {
+            partners.forEach(partner -> System.out.println("Partner: " + partner));
+        }
+        return partners;
     }
+
+//    @Override
+//    public List<PartnerDTO> getAllPartners() {
+//        List<PartnerDTO> partners = partnerRepository.findAllWithConnections();
+//        if (partners == null || partners.isEmpty()) {
+//            System.out.println("No partners found in database.");
+//        } else {
+//            partners.forEach(partner -> System.out.println("Partner: " + partner));
+//        }
+//        return partners;
+//    }
+
+//    @Override
+//    public List<PartnerDTO> getAllPartners() {
+//        List<Partner> partners = partnerRepository.findAll(); // Temporarily using findAll
+//        if (partners == null || partners.isEmpty()) {
+//            System.out.println("No partners found in database.");
+//            return Collections.emptyList();
+//        }
+//
+//        partners.forEach(partner -> System.out.println("Fetched Partner: " + partner));
+//
+//        return partners.stream().map(this::convertToDTO).collect(Collectors.toList());
+//    }
+
+
+
+    // Conversion helper method
+    private PartnerDTO convertToDTO(Partner partner) {
+        PartnerDTO dto = new PartnerDTO();
+        dto.setId(partner.getId());
+        dto.setName(partner.getName());
+        dto.setLastname(partner.getLastname());
+        dto.setEmail(partner.getEmail());
+        dto.setPassword(partner.getPassword());
+        dto.setPhone(partner.getPhone());
+        dto.setImg(partner.getImg());
+        dto.setService(partner.getService());
+        dto.setRating(partner.getRating()); // assuming rating is a field in Partner
+        return dto;
+    }
+
 
     @Override
     public Partner blockPartner(Long id) {

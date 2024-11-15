@@ -177,17 +177,6 @@ public class ClientServiceImpl implements ClientService {
         return reservations.stream().map(Reservation::getReservationDto).collect(Collectors.toList());
     }
 
-//    private ReservationDTO convertToDTO(Reservation reservation) {
-//        return new ReservationDTO(
-//                reservation.getId(),
-//                reservation.getUser().getId(),
-//                reservation.getUser().getName(),
-//                reservation.getAd().getServiceName(),
-//                reservation.getBookDate(),
-//                reservation.getReservationStatus().toString()
-//        );
-//    }
-
     @Override
     public List<ReservationDTO> getAllBookingsByCustomers() {
         return reservationRepository.findAll().stream().map(Reservation::getReservationDto).collect(Collectors.toList());
@@ -241,15 +230,6 @@ public class ClientServiceImpl implements ClientService {
         return weeklyRevenue;
     }
 
-    private double calculateDailyRevenue(LocalDate date) {
-        // Assuming each booking has a revenue amount and a booking date
-        List<Reservation> dailyBookings = reservationRepository.findByBookingDate(date);
-
-        // Sum up the revenue from each booking on this date
-        return dailyBookings.stream()
-                .mapToDouble(Reservation::getPrice)  // Assuming each Booking has a getRevenue() method
-                .sum();
-    }
     @Override
     public List<String> getMonthlyLabels() {
         int currentYear = LocalDate.now().getYear();
@@ -265,33 +245,34 @@ public class ClientServiceImpl implements ClientService {
         return labels;
     }
 
+    @Override
     public List<Double> getMonthlyRevenue() {
+        int currentYear = LocalDate.now().getYear();
         List<Double> monthlyRevenues = new ArrayList<>();
-        YearMonth currentMonth = YearMonth.now();
 
-        // Loop through each month in the current year (January to December)
-        for (int i = 0; i < 12; i++) {
-            YearMonth month = currentMonth.minusMonths(i);
-            LocalDate firstDayOfMonth = month.atDay(1);
-            LocalDate lastDayOfMonth = month.atEndOfMonth();
+        for (int month = 1; month <= 12; month++) {
+            LocalDate firstDayOfMonth = LocalDate.of(currentYear, month, 1);
+            LocalDate lastDayOfMonth = firstDayOfMonth.with(TemporalAdjusters.lastDayOfMonth());
 
-            // If it's the current month, adjust the last date to the current date
-            if (month.equals(currentMonth)) {
-                lastDayOfMonth = LocalDate.now();
-            }
+            // Debugging: Ensure correct date range is calculated
+            System.out.println("Month: " + month + ", Start Date: " + firstDayOfMonth + ", End Date: " + lastDayOfMonth);
 
-            // Calculate revenue for this month
-            double revenue = calculateRevenueBetweenDates(firstDayOfMonth, lastDayOfMonth);
+            List<Reservation> monthlyReservations = reservationRepository.findByDateRange(firstDayOfMonth, lastDayOfMonth);
 
-            // Add revenue to the list
-            if (revenue > 0) {
-                monthlyRevenues.add(revenue);
-            } else {
-                monthlyRevenues.add(0.0); // Optional: Return 0 if no revenue
-            }
+            // Debugging: Ensure reservations are fetched properly
+            System.out.println("Reservations for Month " + month + ": " + monthlyReservations.size());
+
+            double monthlyRevenue = monthlyReservations.stream()
+                    .filter(reservation -> "Paid".equalsIgnoreCase(reservation.getPaymentStatus())) // Ensure case-insensitivity
+                    .mapToDouble(Reservation::getPrice)
+                    .sum();
+
+            // Debugging: Ensure revenue calculation is correct
+            System.out.println("Revenue for Month " + month + ": " + monthlyRevenue);
+
+            monthlyRevenues.add(monthlyRevenue);
         }
 
-        Collections.reverse(monthlyRevenues);  // Reverse the list to get Jan-Dec order
         return monthlyRevenues;
     }
 
@@ -299,39 +280,62 @@ public class ClientServiceImpl implements ClientService {
     public List<String> getYearlyLabels() {
         List<Reservation> reservations = reservationRepository.findAll();
 
-        // Extract distinct years from the reservation data
         Set<Integer> yearsSet = reservations.stream()
                 .map(reservation -> reservation.getBookDate().getYear())
                 .collect(Collectors.toSet());
 
-        // Convert the Set of years to a List and sort it in descending order
         List<String> yearsList = yearsSet.stream()
-                .sorted(Comparator.reverseOrder())  // To get the years in descending order
-                .map(String::valueOf)  // Convert the Integer years to String
+                .sorted(Comparator.reverseOrder())
+                .map(String::valueOf)
                 .collect(Collectors.toList());
 
         return yearsList;
     }
 
-
-
     @Override
-    public double getYearlyRevenue() {
-        LocalDate startOfYear = LocalDate.now().with(TemporalAdjusters.firstDayOfYear());
-        return calculateRevenueBetweenDates(startOfYear, LocalDate.now());
+    public List<Double> getYearlyRevenueList() {
+        List<String> years = getYearlyLabels();
+        List<Double> yearlyRevenues = new ArrayList<>();
+
+        for (String yearStr : years) {
+            int year = Integer.parseInt(yearStr);
+            LocalDate startOfYear = LocalDate.of(year, 1, 1);
+            LocalDate endOfYear = LocalDate.of(year, 12, 31);
+            double revenue = calculateRevenueBetweenDates(startOfYear, endOfYear);
+            yearlyRevenues.add(revenue > 0 ? revenue : 0.0);
+        }
+
+        return yearlyRevenues;
     }
 
     @Override
-    public double getCustomRangeRevenue(LocalDate startDate, LocalDate endDate) {
-        return calculateRevenueBetweenDates(startDate, endDate);
+    public List<Double> getCustomRangeRevenue(LocalDate startDate, LocalDate endDate) {
+        List<LocalDate> dates = startDate.datesUntil(endDate.plusDays(1)).collect(Collectors.toList());
+        List<Double> revenues = new ArrayList<>();
+
+        for (LocalDate date : dates) {
+            double revenue = calculateDailyRevenue(date);
+            revenues.add(revenue);
+        }
+
+        return revenues;
+    }
+
+    public double calculateDailyRevenue(LocalDate date) {
+        List<Reservation> dailyReservations = reservationRepository.findByBookDate(date);
+        double revenue = dailyReservations.stream()
+                .mapToDouble(Reservation::getPrice) // Changed from getAd().getPrice() to getPrice()
+                .sum();
+        System.out.println("Date: " + date + ", Revenue: " + revenue); // Optional: For debugging
+        return revenue;
     }
 
     private double calculateRevenueBetweenDates(LocalDate startDate, LocalDate endDate) {
         List<Reservation> reservations = reservationRepository.findByDateRange(startDate, endDate);
         return reservations.stream()
-                .mapToDouble(reservation -> reservation.getAd().getPrice())
+                .filter(reservation -> "Paid".equals(reservation.getPaymentStatus())) // Only count paid reservations
+                .mapToDouble(Reservation::getPrice)
                 .sum();
-
     }
 }
 

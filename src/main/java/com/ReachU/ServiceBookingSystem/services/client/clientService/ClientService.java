@@ -18,8 +18,6 @@ public interface ClientService {
 
     List<AdDTO> searchAdByName(String name);
 
-//    boolean bookService(ReservationDTO reservationDTO);
-
     AdDetailsForClientDTO getAdDetailsByAdId(Long adId);
 
     List<ReservationDTO> getAllBookingsByUserId(Long userId);
@@ -55,7 +53,9 @@ public interface ClientService {
 
     List<String> getYearlyLabels();
 
-    double getYearlyRevenue();
+    public List<Double> getYearlyRevenueList();
 
-    double getCustomRangeRevenue(LocalDate startDate, LocalDate endDate);
+    List<Double> getCustomRangeRevenue(LocalDate startDate, LocalDate endDate);
+
+    double calculateDailyRevenue(LocalDate date);
 }

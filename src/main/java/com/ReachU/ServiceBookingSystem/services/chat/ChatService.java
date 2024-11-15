@@ -9,4 +9,6 @@ public interface ChatService {
     void save(ChatMessageModel chatMessageModel);
 
     List<ChatMessageModel> getMessagesByRoomId(Long roomId);
+
+    boolean isUserInRoom(String username, Long roomId);
 }

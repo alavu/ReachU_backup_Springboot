@@ -1,10 +1,12 @@
 package com.ReachU.ServiceBookingSystem.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +18,7 @@ import com.ReachU.ServiceBookingSystem.services.chat.ChatService;
 
 import lombok.RequiredArgsConstructor;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,7 +43,7 @@ public class ChatController {
         chatMessageModel.setTimeStamp(LocalDateTime.now());
         System.out.println("chatMessageModel" + chatMessageModel);
         chatService.save(chatMessageModel);
-        return new ChatMessage(message.getMessage(), message.getUser_id(), message.getPartner_id(), message.getTimeStamp());
+        return new ChatMessage(chatMessageModel.getId(),message.getMessage(), message.getUser_id(), message.getPartner_id(), message.getTimeStamp());
     }
 
     @GetMapping("/api/chat/{roomId}")

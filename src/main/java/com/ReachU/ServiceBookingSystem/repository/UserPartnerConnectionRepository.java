@@ -16,8 +16,10 @@ public interface UserPartnerConnectionRepository extends JpaRepository<UserPartn
 
     List<UserPartnerConnection> findUserPartnerConnectionByPartnerId(Long partnerId);
 
-    Optional<UserPartnerConnection> findByUserIdAndPartnerId(Long userId, Long partnerId);
+//    Optional<UserPartnerConnection> findByUserIdAndPartnerId(Long userId, Long partnerId);
 
-    boolean existsByUserIdAndPartnerId(Long userId, Long partnerId);
+//    boolean existsByUserIdAndPartnerId(Long userId, Long partnerId);
+
+    List<UserPartnerConnection> findByUserIdAndPartnerId(Long userId, Long partnerId);
 }
 

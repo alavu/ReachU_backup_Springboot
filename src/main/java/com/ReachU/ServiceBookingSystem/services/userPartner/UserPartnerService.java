@@ -29,7 +29,11 @@ public class UserPartnerService {
                 .orElseThrow(() -> new EntityNotFoundException("Partner not found."));
 
         // Check if the connection already exists
-        if (connectionRepository.existsByUserIdAndPartnerId(userId, partnerId)) {
+//        if (connectionRepository.existsByUserIdAndPartnerId(userId, partnerId)) {
+//            throw new IllegalStateException("Connection already exists.");
+//        }
+
+        if (!connectionRepository.findByUserIdAndPartnerId(userId, partnerId).isEmpty()) {
             throw new IllegalStateException("Connection already exists.");
         }
 
@@ -50,8 +54,8 @@ public class UserPartnerService {
 
     // Get all users connected to a partner
     public List<User> getConnectedUsers(Long partnerId) {
-//        List<UserPartnerConnection> connections = connectionRepository.findByPartnerId(partnerId);
-        List<UserPartnerConnection> connections = connectionRepository.findUserPartnerConnectionByPartnerId(partnerId);
+//        List<UserPartnerConnection> connections = connectionRepository.findUserPartnerConnectionByPartnerId(partnerId);
+        List<UserPartnerConnection> connections = connectionRepository.findByPartnerId(partnerId);
         if (connections.isEmpty()) {
             System.out.println("No connections found for user ID: " + partnerId);
         } else {
@@ -64,9 +68,19 @@ public class UserPartnerService {
     }
 
     // Disconnect a user from a partner
+//    public void disconnectUserFromPartner(Long userId, Long partnerId) {
+//        UserPartnerConnection connection = connectionRepository.findByUserIdAndPartnerId(userId, partnerId)
+//                .orElseThrow(() -> new EntityNotFoundException("Connection not found."));
+//        connectionRepository.delete(connection);
+//    }
+
+    // Disconnect a user from a partner
     public void disconnectUserFromPartner(Long userId, Long partnerId) {
-        UserPartnerConnection connection = connectionRepository.findByUserIdAndPartnerId(userId, partnerId)
-                .orElseThrow(() -> new EntityNotFoundException("Connection not found."));
+        List<UserPartnerConnection> connections = connectionRepository.findByUserIdAndPartnerId(userId, partnerId);
+        if (connections.isEmpty()) {
+            throw new EntityNotFoundException("Connection not found.");
+        }
+        UserPartnerConnection connection = connections.get(0);
         connectionRepository.delete(connection);
     }
 }

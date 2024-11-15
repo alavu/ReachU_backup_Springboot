@@ -4,6 +4,7 @@ import com.ReachU.ServiceBookingSystem.dto.AdDTO;
 import com.ReachU.ServiceBookingSystem.dto.ReservationDTO;
 import com.ReachU.ServiceBookingSystem.enums.ReservationStatus;
 import com.ReachU.ServiceBookingSystem.enums.ReviewStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.OnDelete;
@@ -50,16 +51,13 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partner_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonBackReference
     private Partner partner;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ad_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Ad ad;
-
-//    public Double getPrice() {
-//        return ad != null ? ad.getPrice() : null;
-//    }
 
     public ReservationDTO getReservationDto(){
         ReservationDTO dto = new ReservationDTO();

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -41,12 +42,21 @@ public class UserPartnerController {
     }
 
     // Get all users connected to a partner
-
     @GetMapping("/users/{partnerId}")
     public ResponseEntity<List<User>> getConnectedUsers(@PathVariable Long partnerId) {
         List<User> users = userPartnerService.getConnectedUsers(partnerId);
+        if (users == null) {
+            users = new ArrayList<>(); // Ensure it's not null
+        }
+        if (users.isEmpty()) {
+            System.out.println("No connections found for partner ID: " + partnerId);
+        } else {
+            users.forEach(user -> System.out.println("Connected user: " + user.getName()));
+        }
         return ResponseEntity.ok(users);
     }
+
+
 
     // Disconnect a user from a partner
     @DeleteMapping("/disconnect")

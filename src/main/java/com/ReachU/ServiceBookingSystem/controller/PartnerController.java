@@ -6,14 +6,10 @@ import com.ReachU.ServiceBookingSystem.entity.Partner;
 import com.ReachU.ServiceBookingSystem.repository.PartnerRepository;
 import com.ReachU.ServiceBookingSystem.services.partner.PartnerEarningService;
 import com.ReachU.ServiceBookingSystem.services.partner.PartnerService;
-import com.ReachU.ServiceBookingSystem.services.partner.PartnerServiceImpl;
-import com.ReachU.ServiceBookingSystem.services.userPartner.UserPartnerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,12 +50,10 @@ public class PartnerController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     @GetMapping("/list")
     public ResponseEntity<List<Partner>> getAllPartner() {
-    List<Partner> partners = partnerService.getAllPartners();
-        System.out.println("Partners list:"+partners);
-    return ResponseEntity.ok(partners);
+        List<Partner> partners = partnerService.getAllPartners();
+        return ResponseEntity.ok(partners); // Always return 200 with empty list if no partners
     }
 
     @PutMapping("/block/{id}")

@@ -1,6 +1,8 @@
 package com.ReachU.ServiceBookingSystem.entity;
 
 import com.ReachU.ServiceBookingSystem.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -35,6 +37,8 @@ public class Partner implements UserDetails {
 
     private String service;
 
+    private Double rating;
+
     @Lob
     @Column(columnDefinition = "longblob")
     private byte[] img;
@@ -65,11 +69,14 @@ public class Partner implements UserDetails {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL)
+//    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL)
+//    @JsonManagedReference
+    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Reservation> bookings;
 
     @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonBackReference
     private List<UserPartnerConnection> connections = new ArrayList<>();
 
     @Override

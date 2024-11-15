@@ -74,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(new BCryptPasswordEncoder().encode(signupRequestDTO.getPassword()));
         user.setEnabled(true); //Enable true only after otp verification
         user.setBlocked(false);
+        user.setImageUrl(avatarImg);
         user.setUserRole(UserRole.CLIENT);
         user.set_blocked_by_admin(false);
         user.set_google_logged_in(false);

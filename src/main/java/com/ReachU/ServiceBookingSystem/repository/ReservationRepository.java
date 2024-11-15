@@ -34,8 +34,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.bookDate >= :startDate AND r.bookDate <= :endDate")
     List<Reservation> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT r FROM Reservation r WHERE r.bookDate = :bookingDate")
-    List<Reservation> findByBookingDate(@Param("bookingDate") LocalDate bookDate);
-
+    @Query("SELECT r FROM Reservation r WHERE r.bookDate = :bookDate")
+    List<Reservation> findByBookDate(@Param("bookDate") LocalDate bookDate);
 
 }
+
